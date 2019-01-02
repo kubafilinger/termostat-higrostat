@@ -44,7 +44,7 @@ void setup() {
         if(!SD.exists("data.csv")) {
             File dataFile = SD.open("data.csv", FILE_WRITE);
             
-            dataFile.println("temp1,temp2,temp3,temp_outside,humidity_inside,humidity_outside,inner_fan,outer_fan,heat,air_humidifier,time");
+            dataFile.println("temp1,temp2,temp3,temp_outside,humidity_inside,humidity_outside,inner_fan,outer_fan,light,heat,air_humidifier,time");
             dataFile.close();
         }
     } else {
@@ -61,7 +61,7 @@ void setup() {
 
 void loop() {
     avgTemperature = (getTemperature(tempOne) + getTemperature(tempTwo) + getTemperature(tempThree)) / 3;
-    outsideTemperature = hygrometerExternal.readTemperature();
+    outsideTemperature = hygrometerExternal.readTemperature();v
     airHumidity = hygrometerInternal.readHumidity();
     outsideAirHumidity = hygrometerExternal.readHumidity();
   
@@ -89,7 +89,7 @@ void loop() {
 
     lcd.clear();
 
-    if(millis() - time >= SDCARD_SAVE_FREQ) { // 15 minutes
+    if(millis() - time >= SDCARD_SAVE_TIME) { // 15 minutes
         lcd.setCursor(14, 0);
         lcd.print("S");
         
@@ -102,8 +102,9 @@ void loop() {
             String(outsideAirHumidity) + "," + 
             innerFan->isEnable() + "," + 
             outerFan->isEnable() + "," +
-            digitalRead(LIGHT_DETECTOR) + "," + 
-            heat->isEnable() + "," + 
+            lightIsDetected() + "," + 
+            heat->isEnable() + "," +
+            airHumidifier->isEnable() + "," +
             millis()
         );
 
@@ -180,4 +181,8 @@ bool saveToSDCard(String row) {
 
 float getTemperature(int analogPin) {
     return (((analogRead(analogPin) * 5.0) / 1024.0) - 0.5) * 100;
+}
+
+bool lightIsDetected() {
+    return digitalRead(LIGHT_DETECTOR) ? false : true;
 }

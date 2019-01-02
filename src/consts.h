@@ -13,7 +13,7 @@
 #define TEMP_DEVIATION 1.0
 #define REF_HUMIDITY 50.0
 #define HUMIDITY_DEVIATION 5.0
-#define SDCARD_SAVE_FREQ 899115
+#define SDCARD_SAVE_TIME 299115
 #define TIME_DISPLAY_SCREEN 5
 
 const int tempOne = 1;
