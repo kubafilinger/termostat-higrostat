@@ -61,7 +61,7 @@ void setup() {
 
 void loop() {
     avgTemperature = (getTemperature(tempOne) + getTemperature(tempTwo) + getTemperature(tempThree)) / 3;
-    outsideTemperature = hygrometerExternal.readTemperature();v
+    outsideTemperature = hygrometerExternal.readTemperature();
     airHumidity = hygrometerInternal.readHumidity();
     outsideAirHumidity = hygrometerExternal.readHumidity();
   
