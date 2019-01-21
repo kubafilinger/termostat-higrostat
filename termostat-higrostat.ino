@@ -8,7 +8,7 @@
 #include "src/PWMDevice.h"
 #include "src/helpers.h"
 
-float avgTemperature = 0;
+float insideTemperature = 0;
 float outsideTemperature = 0;
 float airHumidity = 0;
 float outsideAirHumidity = 0;
@@ -44,7 +44,7 @@ void setup() {
         if(!SD.exists("data.csv")) {
             File dataFile = SD.open("data.csv", FILE_WRITE);
             
-            dataFile.println("temp1,temp2,temp3,temp_outside,humidity_inside,humidity_outside,inner_fan,outer_fan,light,heat,air_humidifier,time");
+            dataFile.println("temp2,temp_inside,temp_outside,humidity_inside,humidity_outside,inner_fan,outer_fan,light,heat,air_humidifier,time");
             dataFile.close();
         }
     } else {
@@ -60,16 +60,16 @@ void setup() {
 }
 
 void loop() {
-    avgTemperature = (getTemperature(tempOne) + getTemperature(tempTwo) + getTemperature(tempThree)) / 3;
     outsideTemperature = hygrometerExternal.readTemperature();
+    insideTemperature = hygrometerInternal.readTemperature();
     airHumidity = hygrometerInternal.readHumidity();
     outsideAirHumidity = hygrometerExternal.readHumidity();
   
-    if(avgTemperature - TEMP_DEVIATION > REF_TEMP) { // temperatura wyzsza niz powinna
+    if(insideTemperature - TEMP_DEVIATION > REF_TEMP) { // temperatura wyzsza niz powinna
         heat->disable();
         innerFan->enable();
         outerFan->enable();
-    } else if(avgTemperature + TEMP_DEVIATION < REF_TEMP) { // temp nizsza niz powinna
+    } else if(insideTemperature + TEMP_DEVIATION < REF_TEMP) { // temp nizsza niz powinna
         heat->enable();
         innerFan->disable();
         outerFan->disable();
@@ -94,9 +94,8 @@ void loop() {
         lcd.print("S");
         
         String row = String(
-            String(getTemperature(tempOne)) + "," + 
             String(getTemperature(tempTwo)) + "," + 
-            String(getTemperature(tempThree)) + "," + 
+            String(insideTemperature) + "," + 
             String(outsideTemperature) + "," + 
             String(airHumidity) + "," + 
             String(outsideAirHumidity) + "," + 
@@ -105,7 +104,7 @@ void loop() {
             lightIsDetected() + "," + 
             heat->isEnable() + "," +
             airHumidifier->isEnable() + "," +
-            millis()
+            static_cast<int>(millis() / 1000)
         );
 
         saveToSDCard(row);
@@ -117,7 +116,7 @@ void loop() {
         lcd.print("Inside:");
 
         lcd.setCursor(0, 1);
-        lcd.print(avgTemperature, 1);
+        lcd.print(insideTemperature, 1);
         lcd.print("*C");
 
         // display air humidity
