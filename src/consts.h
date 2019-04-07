@@ -15,6 +15,13 @@
 #define HUMIDITY_DEVIATION 5.0
 #define SDCARD_SAVE_TIME 299115
 #define TIME_DISPLAY_SCREEN 5
+#define NUMBER_OF_SCREENS 2
+
+// lcd
+#define LCD_COLS 16
+#define LCD_SIGN_INNER_FAN 'F'
+#define LCD_SIGN_OUTER_FAN 'O'
+#define LCD_SIGN_HEAT 'H'
 
 const int tempOne = 1;
 const int tempTwo = 2;
@@ -22,3 +29,4 @@ const int tempThree = 3;
 
 //sd card
 const int chipSelect = 10;
+char* csvFileName = "data.csv";
