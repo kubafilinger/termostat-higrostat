@@ -1,5 +1,5 @@
-#include <Wire.h> 
-#include <LiquidCrystal_I2C.h>
+#include <Wire.h>
+#include <LiquidCrystalI2C.h>
 #include "DHT.h"
 #include <SPI.h>
 #include <SD.h>
@@ -16,7 +16,7 @@ bool canSaveToSdCard = false;
 unsigned long time = 0;
 int timeDisplayScreen = 0;
 
-LiquidCrystal_I2C lcd(0x38, 3, 1, 2, 4, 5, 6, 7);
+LiquidCrystalI2C lcd(0x38, 3, 1, 2, 4, 5, 6, 7);
 DHT hygrometerInternal(DHT_INTERNAL_PIN, DHTTYPE);
 DHT hygrometerExternal(DHT_EXTERNAL_PIN, DHTTYPE);
 Device *heat = new Device(HEAT);
@@ -25,10 +25,8 @@ PWMDevice *innerFan = new PWMDevice(FAN_IN);
 PWMDevice *outerFan = new PWMDevice(FAN_OUT);
 
 void setup() {
-    lcd.begin(16, 2);
-    lcd.clear();
-    lcd.home();
-    lcd.print("Inicjalizacja");
+    lcd.begin(LCD_COLS, 2);
+    lcd.printRow(0, "Inicjalizacja");
 
     heat->disable();
     innerFan->disable();
@@ -41,22 +39,17 @@ void setup() {
     if (SD.begin(chipSelect)) {
         canSaveToSdCard = true;
     
-        if(!SD.exists("data.csv")) {
-            File dataFile = SD.open("data.csv", FILE_WRITE);
+        if(!SD.exists(csvFileName)) {
+            File dataFile = SD.open(csvFileName, FILE_WRITE);
             
             dataFile.println("temp2,temp_inside,temp_outside,humidity_inside,humidity_outside,inner_fan,outer_fan,light,heat,air_humidifier,time");
             dataFile.close();
         }
     } else {
-        lcd.clear();
-        lcd.home();
-        lcd.print("SD Card Error!");
+        lcd.printRow(0, "SD Card Error!");
     }
 
     delay(1000);
-    
-    lcd.clear();
-    lcd.home();
 }
 
 void loop() {
@@ -65,6 +58,8 @@ void loop() {
     airHumidity = hygrometerInternal.readHumidity();
     outsideAirHumidity = hygrometerExternal.readHumidity();
   
+    //LOGIC
+
     if(insideTemperature - TEMP_DEVIATION > REF_TEMP) { // temperatura wyzsza niz powinna
         heat->disable();
         innerFan->enable();
@@ -87,13 +82,10 @@ void loop() {
         airHumidifier->disable();
     }
 
-    lcd.clear();
+    //SAVE TO SDCARD
 
     if(millis() - time >= SDCARD_SAVE_TIME) { // 15 minutes
-        lcd.setCursor(14, 0);
-        lcd.print("S");
-        
-        String row = String(
+        String csvRow = String(
             String(getTemperature(tempTwo)) + "," + 
             String(insideTemperature) + "," + 
             String(outsideTemperature) + "," + 
@@ -107,69 +99,48 @@ void loop() {
             static_cast<int>(millis() / 1000)
         );
 
-        saveToSDCard(row);
+        saveToSDCard(csvRow);
         time = millis();
     }
 
-    if(timeDisplayScreen < TIME_DISPLAY_SCREEN) { // screen 1
-        lcd.setCursor(0, 0);
-        lcd.print("Inside:");
+    //DISPLAY ON LCD
 
-        lcd.setCursor(0, 1);
-        lcd.print(insideTemperature, 1);
-        lcd.print("*C");
+    char row1[LCD_COLS + 1], row2[LCD_COLS + 1], innerFanSign, outerFanSign, heatSign;
 
-        // display air humidity
-        lcd.setCursor(8, 1);
-        lcd.print(airHumidity, 1);
-        lcd.print("%");
-    } else if(timeDisplayScreen < TIME_DISPLAY_SCREEN * 2) { // screen 2
-        lcd.setCursor(0, 0);
-        lcd.print("Outside:");
+    // diaplay fan and heat
+    innerFanSign = innerFan->isEnable() ? LCD_SIGN_INNER_FAN : ' '; 
+    outerFanSign = outerFan->isEnable() ? LCD_SIGN_OUTER_FAN : ' ';
+    heatSign = heat->isEnable() ? LCD_SIGN_HEAT : ' ';
 
-        lcd.setCursor(0, 1);
-        lcd.print(outsideTemperature, 1);
-        lcd.print("*C");
-
-        // display outside air humidity
-        lcd.setCursor(8, 1);
-        lcd.print(outsideAirHumidity, 1);
-        lcd.print("%");
-    } else {
+    if (timeDisplayScreen >= TIME_DISPLAY_SCREEN * NUMBER_OF_SCREENS) {
         timeDisplayScreen = 0;
     }
 
-    // diaplay innerFan and heat
-    if(innerFan->isEnable()) {
-        lcd.setCursor(13, 0);
-        lcd.print("F");
-    } else {
-        lcd.setCursor(13, 0);
-        lcd.print(" ");
+    if (timeDisplayScreen < TIME_DISPLAY_SCREEN) { // screen 1
+        sprintf(row1, "Inside:  %c%c%c", innerFanSign, outerFanSign, heatSign);
+        sprintf(row2, "%.1f*C %.1f%%", insideTemperature, airHumidity);
+    } else if (timeDisplayScreen < TIME_DISPLAY_SCREEN * 2) { // screen 2
+        sprintf(row1, "Outside:  %c%c%c", innerFanSign, outerFanSign, heatSign);
+        sprintf(row2, "%.1f*C %.1f%%", outsideTemperature, outsideAirHumidity);
     }
 
-    if(heat->isEnable()) {
-        lcd.setCursor(15, 0);
-        lcd.print("H");
-    } else {
-        lcd.setCursor(15, 0);
-        lcd.print(" ");
-    }
+    lcd.printRow(0, String(row1));
+    lcd.printRow(1, String(row2));
     
     timeDisplayScreen++;
     
     delay(1000);
 }
 
-bool saveToSDCard(String row) {
+bool saveToSDCard(String csvRow) {
     if(!canSaveToSdCard) {
         return false;
     }
 
-    File dataFile = SD.open("data.csv", FILE_WRITE);
+    File dataFile = SD.open(csvFileName, FILE_WRITE);
 
     if(dataFile) {
-        dataFile.println(row);
+        dataFile.println(csvRow);
         dataFile.close();
 
         return true;
