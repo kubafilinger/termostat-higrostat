@@ -3,9 +3,11 @@
 #include "DHT.h"
 #include <SPI.h>
 #include <SD.h>
+#include <ThreeWire.h>
 #include "src/consts.h"
 #include "src/Device.h"
 #include "src/PWMDevice.h"
+#include "src/Rtc.h"
 #include "src/helpers.h"
 
 float insideTemperature = 0;
@@ -16,6 +18,8 @@ bool canSaveToSdCard = false;
 unsigned long time = 0;
 int timeDisplayScreen = 0;
 
+ThreeWire wire(RTC_DATA, RTC_CLOCK, RTC_RESET);
+Rtc *rtc = new Rtc(wire);
 LiquidCrystalI2C lcd(0x38, 3, 1, 2, 4, 5, 6, 7);
 DHT hygrometerInternal(DHT_INTERNAL_PIN, DHTTYPE);
 DHT hygrometerExternal(DHT_EXTERNAL_PIN, DHTTYPE);
@@ -27,6 +31,7 @@ PWMDevice *outerFan = new PWMDevice(FAN_OUT);
 void setup() {
     lcd.begin(LCD_COLS, 2);
     lcd.printRow(0, "Inicjalizacja");
+    rtc->begin();
 
     heat->disable();
     innerFan->disable();
@@ -96,7 +101,7 @@ void loop() {
             lightIsDetected() + "," + 
             heat->isEnable() + "," +
             airHumidifier->isEnable() + "," +
-            static_cast<int>(millis() / 1000)
+            rtc->prettyFormat()
         );
 
         saveToSDCard(csvRow);
@@ -117,11 +122,11 @@ void loop() {
     }
 
     if (timeDisplayScreen < TIME_DISPLAY_SCREEN) { // screen 1
-        sprintf(row1, "Inside:  %c%c%c", innerFanSign, outerFanSign, heatSign);
-        sprintf(row2, "%.1f*C %.1f%%", insideTemperature, airHumidity);
+        sprintf(row1, "%s", rtc->prettyFormat().c_str());
+        sprintf(row2, "I: %.1f*C %.1f%% %c%c%c", insideTemperature, airHumidity, innerFanSign, outerFanSign, heatSign);
     } else if (timeDisplayScreen < TIME_DISPLAY_SCREEN * 2) { // screen 2
-        sprintf(row1, "Outside:  %c%c%c", innerFanSign, outerFanSign, heatSign);
-        sprintf(row2, "%.1f*C %.1f%%", outsideTemperature, outsideAirHumidity);
+        sprintf(row1, "%s", rtc->prettyFormat().c_str());
+        sprintf(row2, "O: %.1f*C %.1f%% %c%c%c", outsideTemperature, outsideAirHumidity, innerFanSign, outerFanSign, heatSign);
     }
 
     lcd.printRow(0, String(row1));
