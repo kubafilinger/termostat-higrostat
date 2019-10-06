@@ -65,26 +65,35 @@ void loop() {
   
     //LOGIC
 
-    if(insideTemperature - TEMP_DEVIATION > REF_TEMP) { // temperatura wyzsza niz powinna
-        heat->disable();
-        innerFan->enable();
-        outerFan->enable();
-    } else if(insideTemperature + TEMP_DEVIATION < REF_TEMP) { // temp nizsza niz powinna
+    const int daysCount = 4;
+    int day1 = 1;
+    int day2 = 2;
+    int day3 = 3;
+    int day4 = 0;
+
+    if (day % daysCount = day1) {
         heat->enable();
         innerFan->disable();
         outerFan->disable();
-    } else { // temperatura idealna
+        airHumidifier->disable();
+    } else if (day % daysCount = day2) {
+        heat->disable();
+        innerFan->enable();
+        outerFan->disable();
+        airHumidifier->disable();
+        
+    } else if (day % daysCount = day3) {
+        heat->disable();
+        innerFan->disable();
+        outerFan->enable();
+        airHumidifier->disable();
+        
+    } else if (day % daysCount = day4) {
         heat->disable();
         innerFan->disable();
         outerFan->disable();
-    }
-
-    if(airHumidity - HUMIDITY_DEVIATION > REF_HUMIDITY) { // wilgotnosc wyzsza niz powinna
-        airHumidifier->disable();
-    } else if(airHumidity + HUMIDITY_DEVIATION < REF_HUMIDITY) { // wilgotnosc nizsza
         airHumidifier->enable();
-    } else { // wilgotność idealna
-        airHumidifier->disable();
+        
     }
 
     //SAVE TO SDCARD
