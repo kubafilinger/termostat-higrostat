@@ -17,6 +17,7 @@ float outsideAirHumidity = 0;
 bool canSaveToSdCard = false;
 unsigned long time = 0;
 int timeDisplayScreen = 0;
+uint8_t dayInMemory = 0;
 
 ThreeWire wire(RTC_DATA, RTC_CLOCK, RTC_RESET);
 Rtc *rtc = new Rtc(wire);
@@ -27,6 +28,12 @@ Device *heat = new Device(HEAT);
 Device *airHumidifier = new Device(AIR_HUMIDIFIER);
 PWMDevice *innerFan = new PWMDevice(FAN_IN);
 PWMDevice *outerFan = new PWMDevice(FAN_OUT);
+
+const uint8_t daysCount = 4;
+uint8_t day1 = 1;
+uint8_t day2 = 2;
+uint8_t day3 = 3;
+uint8_t day4 = 0;
 
 void setup() {
     lcd.begin(LCD_COLS, 2);
@@ -65,35 +72,36 @@ void loop() {
   
     //LOGIC
 
-    const int daysCount = 4;
-    int day1 = 1;
-    int day2 = 2;
-    int day3 = 3;
-    int day4 = 0;
+    uint8_t day = rtc->day();
 
-    if (day % daysCount = day1) {
-        heat->enable();
-        innerFan->disable();
-        outerFan->disable();
-        airHumidifier->disable();
-    } else if (day % daysCount = day2) {
-        heat->disable();
-        innerFan->enable();
-        outerFan->disable();
-        airHumidifier->disable();
-        
-    } else if (day % daysCount = day3) {
-        heat->disable();
-        innerFan->disable();
-        outerFan->enable();
-        airHumidifier->disable();
-        
-    } else if (day % daysCount = day4) {
-        heat->disable();
-        innerFan->disable();
-        outerFan->disable();
-        airHumidifier->enable();
-        
+    if (day != dayInMemory) {
+        if (day % daysCount == day1) {
+            heat->disable();
+            innerFan->disable();
+            outerFan->disable();
+            airHumidifier->enable();
+            
+        } else if (day % daysCount == day2) {
+            heat->enable();
+            innerFan->disable();
+            outerFan->disable();
+            airHumidifier->disable();
+            
+        } else if (day % daysCount == day3) {
+            heat->disable();
+            outerFan->enable();
+            innerFan->disable();
+            airHumidifier->disable();
+            
+        } else if (day % daysCount == day4) {
+            heat->disable();
+            outerFan->disable();
+            innerFan->enable();
+            airHumidifier->disable();
+            
+        }
+
+        dayInMemory = day;
     }
 
     //SAVE TO SDCARD

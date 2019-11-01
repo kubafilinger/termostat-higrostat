@@ -22,14 +22,14 @@ const int tempThree = 3;
 #define TEMP_DEVIATION 1.0
 #define HUMIDITY_DEVIATION 5.0
 #define REF_HUMIDITY 50.0
-#define DHTTYPE DHT11
+#define DHTTYPE DHT22
 
 // lcd
 #define LCD_COLS 16
 #define LCD_SIGN_INNER_FAN 'F'
 #define LCD_SIGN_OUTER_FAN 'O'
 #define LCD_SIGN_HEAT 'H'
-#define TIME_DISPLAY_SCREEN 5
+#define TIME_DISPLAY_SCREEN 5 
 #define NUMBER_OF_SCREENS 2
 
 //sd card

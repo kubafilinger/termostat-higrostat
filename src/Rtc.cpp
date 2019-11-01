@@ -14,6 +14,12 @@ void Rtc::begin() {
 	this->rtc->Begin();
 }
 
+uint8_t Rtc::day() {
+	RtcDateTime dateTime = this->rtc->GetDateTime();
+
+	return dateTime.Day();
+}
+
 String Rtc::prettyFormat() {
 	char result[17];
 	RtcDateTime dateTime = this->rtc->GetDateTime();

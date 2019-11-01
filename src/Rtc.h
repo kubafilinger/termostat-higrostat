@@ -16,6 +16,7 @@ public:
 	Rtc(ThreeWire &wire);
 	~Rtc();
     void begin();
+    uint8_t day();
     String prettyFormat();
 };
 
